@@ -1,0 +1,26 @@
+package com.lista.aula1.model;
+
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+@Entity
+@Table(name = "genres")
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
+public class Genre {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "genre",unique = true, nullable = false)
+    private String genre;
+
+    public Genre(String genre) {
+        this.genre = genre;
+    }
+}
