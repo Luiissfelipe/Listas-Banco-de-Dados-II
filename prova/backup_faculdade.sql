@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict haltBt1j2c03o715krMOPajhkUS1D64WAOu3o4A5RwHL544FPtGIVppf460znHK
+\restrict Ves8TPMUbjNBZ96sBfTIsiSILBTfb4DuB9de7nDOcCJv96KQPYftOPj9hQI4yfr
 
 -- Dumped from database version 17.9 (Debian 17.9-1.pgdg13+1)
 -- Dumped by pg_dump version 17.9 (Debian 17.9-1.pgdg13+1)
@@ -31,13 +31,23 @@ ALTER TABLE IF EXISTS ONLY public.alunos DROP CONSTRAINT IF EXISTS alunos_pkey;
 ALTER TABLE IF EXISTS ONLY public.alunos DROP CONSTRAINT IF EXISTS alunos_email_key;
 ALTER TABLE IF EXISTS ONLY public.alunos DROP CONSTRAINT IF EXISTS alunos_cpf_key;
 ALTER TABLE IF EXISTS public.matriculas ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.alunos_goiania ALTER COLUMN campus DROP DEFAULT;
+ALTER TABLE IF EXISTS public.alunos_goiania ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.alunos_goianesia ALTER COLUMN campus DROP DEFAULT;
+ALTER TABLE IF EXISTS public.alunos_goianesia ALTER COLUMN id DROP DEFAULT;
+ALTER TABLE IF EXISTS public.alunos_anapolis ALTER COLUMN campus DROP DEFAULT;
+ALTER TABLE IF EXISTS public.alunos_anapolis ALTER COLUMN id DROP DEFAULT;
 ALTER TABLE IF EXISTS public.alunos ALTER COLUMN id DROP DEFAULT;
+DROP VIEW IF EXISTS public.v_alunos_global;
 DROP SEQUENCE IF EXISTS public.matriculas_id_seq;
 DROP TABLE IF EXISTS public.matriculas;
 DROP TABLE IF EXISTS public.flyway_schema_history;
 DROP TABLE IF EXISTS public.disciplinas;
 DROP TABLE IF EXISTS public.cursos;
 DROP SEQUENCE IF EXISTS public.alunos_id_seq;
+DROP TABLE IF EXISTS public.alunos_goiania;
+DROP TABLE IF EXISTS public.alunos_goianesia;
+DROP TABLE IF EXISTS public.alunos_anapolis;
 DROP TABLE IF EXISTS public.alunos;
 SET default_tablespace = '';
 
@@ -53,11 +63,48 @@ CREATE TABLE public.alunos (
     cpf bigint NOT NULL,
     email character varying(50) NOT NULL,
     sexo character(1) NOT NULL,
+    campus character varying(20) DEFAULT 'GOIANESIA'::character varying,
     CONSTRAINT alunos_sexo_check CHECK ((sexo = ANY (ARRAY['F'::bpchar, 'M'::bpchar])))
 );
 
 
 ALTER TABLE public.alunos OWNER TO postgres;
+
+--
+-- Name: alunos_anapolis; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.alunos_anapolis (
+    CONSTRAINT alunos_anapolis_campus_check CHECK (((campus)::text = 'ANAPOLIS'::text))
+)
+INHERITS (public.alunos);
+
+
+ALTER TABLE public.alunos_anapolis OWNER TO postgres;
+
+--
+-- Name: alunos_goianesia; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.alunos_goianesia (
+    CONSTRAINT alunos_goianesia_campus_check CHECK (((campus)::text = 'GOIANESIA'::text))
+)
+INHERITS (public.alunos);
+
+
+ALTER TABLE public.alunos_goianesia OWNER TO postgres;
+
+--
+-- Name: alunos_goiania; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.alunos_goiania (
+    CONSTRAINT alunos_goiania_campus_check CHECK (((campus)::text = 'GOIANIA'::text))
+)
+INHERITS (public.alunos);
+
+
+ALTER TABLE public.alunos_goiania OWNER TO postgres;
 
 --
 -- Name: alunos_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
@@ -164,10 +211,84 @@ ALTER SEQUENCE public.matriculas_id_seq OWNED BY public.matriculas.id;
 
 
 --
+-- Name: v_alunos_global; Type: VIEW; Schema: public; Owner: postgres
+--
+
+CREATE VIEW public.v_alunos_global AS
+ SELECT alunos_goianesia.id,
+    alunos_goianesia.nome,
+    alunos_goianesia.cpf,
+    alunos_goianesia.email,
+    alunos_goianesia.sexo,
+    alunos_goianesia.campus
+   FROM public.alunos_goianesia
+UNION ALL
+ SELECT alunos_anapolis.id,
+    alunos_anapolis.nome,
+    alunos_anapolis.cpf,
+    alunos_anapolis.email,
+    alunos_anapolis.sexo,
+    alunos_anapolis.campus
+   FROM public.alunos_anapolis
+UNION ALL
+ SELECT alunos_goiania.id,
+    alunos_goiania.nome,
+    alunos_goiania.cpf,
+    alunos_goiania.email,
+    alunos_goiania.sexo,
+    alunos_goiania.campus
+   FROM public.alunos_goiania;
+
+
+ALTER VIEW public.v_alunos_global OWNER TO postgres;
+
+--
 -- Name: alunos id; Type: DEFAULT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.alunos ALTER COLUMN id SET DEFAULT nextval('public.alunos_id_seq'::regclass);
+
+
+--
+-- Name: alunos_anapolis id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.alunos_anapolis ALTER COLUMN id SET DEFAULT nextval('public.alunos_id_seq'::regclass);
+
+
+--
+-- Name: alunos_anapolis campus; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.alunos_anapolis ALTER COLUMN campus SET DEFAULT 'GOIANESIA'::character varying;
+
+
+--
+-- Name: alunos_goianesia id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.alunos_goianesia ALTER COLUMN id SET DEFAULT nextval('public.alunos_id_seq'::regclass);
+
+
+--
+-- Name: alunos_goianesia campus; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.alunos_goianesia ALTER COLUMN campus SET DEFAULT 'GOIANESIA'::character varying;
+
+
+--
+-- Name: alunos_goiania id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.alunos_goiania ALTER COLUMN id SET DEFAULT nextval('public.alunos_id_seq'::regclass);
+
+
+--
+-- Name: alunos_goiania campus; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.alunos_goiania ALTER COLUMN campus SET DEFAULT 'GOIANESIA'::character varying;
 
 
 --
@@ -181,27 +302,46 @@ ALTER TABLE ONLY public.matriculas ALTER COLUMN id SET DEFAULT nextval('public.m
 -- Data for Name: alunos; Type: TABLE DATA; Schema: public; Owner: postgres
 --
 
-COPY public.alunos (id, nome, cpf, email, sexo) FROM stdin;
-1	Felipe Andrade	11122233344	felipe@email.com	M
-2	Ana Julia	22233344455	ana@email.com	F
-3	Carlos Eduardo	33344455566	carlos@email.com	M
-4	Beatriz Lopes	44455566677	beatriz@email.com	F
-5	Diego Souza	55566677788	diego@email.com	M
-6	Fernanda Lima	66677788899	fernanda@email.com	F
-7	Gabriel Mota	77788899900	gabriel@email.com	M
-8	Heloisa Paiva	88899900011	heloisa@email.com	F
-9	Igor Gomes	99900011122	igor@email.com	M
-10	Julia Costa	10101010101	julia@email.com	F
-11	Kevin Silva	12121212121	kevin@email.com	M
-12	Larissa Reis	13131313131	larissa@email.com	F
-13	Mateus Solto	14141414141	mateus@email.com	M
-14	Nicole Dias	15151515151	nicole@email.com	F
-15	Otavio Cruz	16161616161	otavio@email.com	M
-16	Patricia Mel	17171717171	patricia@email.com	F
-17	Quirino Jose	18181818181	quirino@email.com	M
-18	Rafaela Luz	19191919191	rafaela@email.com	F
-19	Samuel Viana	20202020202	samuel@email.com	M
-20	Tatiana Paz	21212121212	tatiana@email.com	F
+COPY public.alunos (id, nome, cpf, email, sexo, campus) FROM stdin;
+1	Felipe Andrade	11122233344	felipe@email.com	M	GOIANESIA
+2	Ana Julia	22233344455	ana@email.com	F	GOIANESIA
+3	Carlos Eduardo	33344455566	carlos@email.com	M	GOIANESIA
+4	Beatriz Lopes	44455566677	beatriz@email.com	F	GOIANESIA
+5	Diego Souza	55566677788	diego@email.com	M	GOIANESIA
+6	Fernanda Lima	66677788899	fernanda@email.com	F	ANAPOLIS
+7	Gabriel Mota	77788899900	gabriel@email.com	M	ANAPOLIS
+8	Heloisa Paiva	88899900011	heloisa@email.com	F	ANAPOLIS
+9	Igor Gomes	99900011122	igor@email.com	M	ANAPOLIS
+10	Julia Costa	10101010101	julia@email.com	F	ANAPOLIS
+11	Kevin Silva	12121212121	kevin@email.com	M	GOIANIA
+12	Larissa Reis	13131313131	larissa@email.com	F	GOIANIA
+13	Mateus Solto	14141414141	mateus@email.com	M	GOIANIA
+14	Nicole Dias	15151515151	nicole@email.com	F	GOIANIA
+15	Otavio Cruz	16161616161	otavio@email.com	M	GOIANIA
+\.
+
+
+--
+-- Data for Name: alunos_anapolis; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.alunos_anapolis (id, nome, cpf, email, sexo, campus) FROM stdin;
+\.
+
+
+--
+-- Data for Name: alunos_goianesia; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.alunos_goianesia (id, nome, cpf, email, sexo, campus) FROM stdin;
+\.
+
+
+--
+-- Data for Name: alunos_goiania; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.alunos_goiania (id, nome, cpf, email, sexo, campus) FROM stdin;
 \.
 
 
@@ -211,9 +351,8 @@ COPY public.alunos (id, nome, cpf, email, sexo) FROM stdin;
 
 COPY public.cursos (cod, nome, coordenador) FROM stdin;
 CC	Ciência da Computação	Natan Rodrigues
-SI	Sistemas para Internet	Daniel Silva
-ECA	Engenharia de Controle e Automação	Marcos Oliveira
-ADS	Análise e Desenvolvimento de Sistemas	Lucas Ferreira
+SI	Sistemas para Internet	Lucas Oliveira
+ECA	Engenharia de Controle e Automação	Frederico
 \.
 
 
@@ -222,13 +361,13 @@ ADS	Análise e Desenvolvimento de Sistemas	Lucas Ferreira
 --
 
 COPY public.disciplinas (cod, nome, vagas) FROM stdin;
-BD1	Banco de Dados I	7
 BD2	Banco de Dados II	18
 PROG1	Programação I	11
 PROG2	Programação II	20
-CALC1	Cálculo I	5
+CALC1	Cálculo I	1
 CALC2	Cálculo II	14
 ES	Engenharia de Software	9
+BD1	Banco de Dados I	6
 \.
 
 
@@ -237,8 +376,9 @@ ES	Engenharia de Software	9
 --
 
 COPY public.flyway_schema_history (installed_rank, version, description, type, script, checksum, installed_by, installed_on, execution_time, success) FROM stdin;
-1	1	create initial tables	SQL	V1__create_initial_tables.sql	-651555005	postgres	2026-04-14 15:52:39.570821	39	t
-2	2	Integridade e Seguranca	SQL	V2__Integridade_e_Seguranca.sql	1325735912	postgres	2026-04-14 15:52:39.685451	38	t
+1	1	create initial tables	SQL	V1__create_initial_tables.sql	-651555005	postgres	2026-04-14 19:41:45.548048	17	t
+2	2	Integridade e Seguranca	SQL	V2__Integridade_e_Seguranca.sql	1325735912	postgres	2026-04-14 19:41:45.59184	15	t
+3	3	Distribuicao e Fragmentacao	SQL	V3__Distribuicao_e_Fragmentacao.sql	-429426142	postgres	2026-04-14 19:41:45.624391	10	t
 \.
 
 
@@ -247,18 +387,36 @@ COPY public.flyway_schema_history (installed_rank, version, description, type, s
 --
 
 COPY public.matriculas (id, semestre, id_aluno, cod_curso, cod_disciplina) FROM stdin;
-1	20261	1	SI	BD2
-2	20262	1	SI	PROG1
-3	20261	1	SI	ES
-4	20261	2	CC	BD1
-5	20262	2	CC	CALC1
-6	20261	2	CC	PROG1
-7	20261	5	ECA	CALC1
-8	20262	5	ECA	CALC2
-9	20262	5	ECA	PROG1
-10	20261	11	ADS	ES
-11	20262	11	ADS	PROG1
-12	20261	11	ADS	BD1
+1	20261	1	CC	BD1
+2	20262	1	CC	PROG1
+3	20261	2	CC	BD1
+4	20262	2	CC	PROG2
+5	20261	3	CC	BD1
+6	20262	3	CC	CALC2
+7	20261	4	CC	PROG1
+8	20262	4	CC	ES
+9	20261	5	CC	PROG1
+10	20262	5	CC	ES
+11	20261	6	SI	BD2
+12	20262	6	SI	PROG2
+13	20261	7	SI	BD2
+14	20262	7	SI	ES
+15	20261	8	SI	BD2
+16	20262	8	SI	CALC2
+17	20261	9	SI	PROG1
+18	20262	9	SI	ES
+19	20261	10	SI	PROG1
+20	20262	10	SI	ES
+21	20261	11	ECA	CALC2
+22	20262	11	ECA	PROG1
+23	20261	12	ECA	CALC2
+24	20262	12	ECA	PROG2
+25	20261	13	ECA	CALC2
+26	20262	13	ECA	BD1
+27	20261	14	ECA	ES
+28	20262	14	ECA	PROG1
+29	20261	15	ECA	ES
+30	20262	15	ECA	PROG2
 \.
 
 
@@ -266,14 +424,14 @@ COPY public.matriculas (id, semestre, id_aluno, cod_curso, cod_disciplina) FROM 
 -- Name: alunos_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.alunos_id_seq', 20, true);
+SELECT pg_catalog.setval('public.alunos_id_seq', 15, true);
 
 
 --
 -- Name: matriculas_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
 --
 
-SELECT pg_catalog.setval('public.matriculas_id_seq', 12, true);
+SELECT pg_catalog.setval('public.matriculas_id_seq', 31, true);
 
 
 --
@@ -407,5 +565,5 @@ GRANT SELECT,UPDATE ON TABLE public.matriculas TO professor;
 -- PostgreSQL database dump complete
 --
 
-\unrestrict haltBt1j2c03o715krMOPajhkUS1D64WAOu3o4A5RwHL544FPtGIVppf460znHK
+\unrestrict Ves8TPMUbjNBZ96sBfTIsiSILBTfb4DuB9de7nDOcCJv96KQPYftOPj9hQI4yfr
 

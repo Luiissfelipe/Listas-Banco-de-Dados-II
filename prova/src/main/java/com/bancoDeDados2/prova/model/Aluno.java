@@ -32,5 +32,7 @@ public class Aluno {
     @Enumerated(EnumType.STRING)
     private Sexo sexo;
 
-
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Campus campus;
 }

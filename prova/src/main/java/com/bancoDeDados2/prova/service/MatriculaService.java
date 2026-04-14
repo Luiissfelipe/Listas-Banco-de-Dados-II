@@ -60,8 +60,13 @@ public class MatriculaService {
                 .orElseThrow(() -> new RuntimeException("Curso não encontrado. Operação abortada."));
 
         // Verifica se a disciplina existe
-        Disciplina disc = discRepo.findById(dto.codDisciplina())
+        Disciplina disc = discRepo.findByCod(dto.codDisciplina())
                 .orElseThrow(() -> new RuntimeException("Disciplina não encontrada. Operação abortada."));
+
+        // Verifica se o aluno já está matriculado nesta disciplina
+        if (matriculaRepo.existsByAluno_IdAndDisciplina_Cod(dto.idAluno(), dto.codDisciplina())) {
+            throw new RuntimeException("Operação abortada: O aluno já está matriculado na disciplina " + disc.getNome() + ".");
+        }
 
         // Verifica integridade de domínio (Vagas >= 0)
         if (disc.getVagas() <= 0) {
@@ -79,10 +84,22 @@ public class MatriculaService {
 
     @Transactional
     public void cancelarMatricula(Long id) {
+        // Localiza a matrícula pelo ID para saber qual aluno e disciplina estão envolvidos
         Matricula matricula = matriculaRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Matrícula não encontrada. Operação abortada."));
 
+        // Localiza a disciplina associada usando o findByCod com Lock
+        // Isso garante que o incremento da vaga seja feito de forma segura e transacional
+        Disciplina disc = discRepo.findByCod(matricula.getDisciplina().getCod())
+                .orElseThrow(() -> new RuntimeException("Disciplina associada não encontrada no sistema."));
+
+        // Realiza o estorno da vaga (incremento)
+        disc.setVagas(disc.getVagas() + 1);
+
+        // Remove a matrícula do banco de dados
         matriculaRepo.delete(matricula);
-        System.out.println("Matricula cancelada com sucesso!");
+
+        System.out.println("Matrícula cancelada com sucesso!");
+        System.out.println("Vaga estornada para a disciplina: " + disc.getNome() + ". Vagas atuais: " + disc.getVagas());
     }
 }
